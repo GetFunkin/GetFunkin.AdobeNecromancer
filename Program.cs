@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Xml;
 
 namespace GetFunkin.AdobeNecromancer
@@ -11,6 +12,7 @@ namespace GetFunkin.AdobeNecromancer
     {
         public static void Main(string[] args)
         {
+            args = new[] {@"C:\Users\xxlen\Downloads\Funkin-master\Funkin-master\assets\week6\images\weeb\spirit.txt"};
             if (args is not {Length: 1} && !Debugger.IsAttached)
             {
                 Console.WriteLine("Expected XML file.");
@@ -19,7 +21,7 @@ namespace GetFunkin.AdobeNecromancer
 
             Console.WriteLine("AdobeNecromancer: Re-animating the dead!");
 
-            if (Debugger.IsAttached)
+            if (Debugger.IsAttached && args is not { Length: 1 })
             {
                 Console.WriteLine("Debugger attached, using pre-defined path to XML file.");
                 args = new[] {Path.Combine("DebugFiles", "logoBumpin.xml")};
@@ -31,45 +33,79 @@ namespace GetFunkin.AdobeNecromancer
 
             Console.WriteLine("Reading XML file...");
 
+            bool xml = true;
+
             using (Stream stream = File.Open(args[0], FileMode.Open))
             {
-                XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings {CheckCharacters = false});
-                bool startingElement = true;
-
-                while (reader.Read())
+                try
                 {
-                    if (reader.NodeType is XmlNodeType.XmlDeclaration or XmlNodeType.Comment or XmlNodeType.Whitespace
-                        or XmlNodeType.EndElement)
-                        continue;
+                    XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings {CheckCharacters = false});
+                    bool startingElement = true;
 
-                    if (reader.NodeType == XmlNodeType.EndElement)
-                        break;
-
-                    if (reader.NodeType == XmlNodeType.Element && startingElement)
+                    while (reader.Read())
                     {
-                        startingElement = false;
-                        imageName = reader.GetAttribute("imagePath");
-                        Console.WriteLine($"TextureAtlas image path: {imageName}");
-                        continue;
+                        if (reader.NodeType is XmlNodeType.XmlDeclaration or XmlNodeType.Comment or XmlNodeType.Whitespace
+                            or XmlNodeType.EndElement)
+                            continue;
+
+                        if (reader.NodeType == XmlNodeType.EndElement)
+                            break;
+
+                        if (reader.NodeType == XmlNodeType.Element && startingElement)
+                        {
+                            startingElement = false;
+                            imageName = reader.GetAttribute("imagePath");
+                            Console.WriteLine($"TextureAtlas image path: {imageName}");
+                            continue;
+                        }
+
+                        Console.WriteLine($"Reading element with data: {reader.NodeType}, " +
+                                          $"Attribute count: {reader.AttributeCount}");
+
+                        string name = reader.GetAttribute("name");
+                        int x = int.Parse(reader.GetAttribute("x")!); // expected value
+                        int y = int.Parse(reader.GetAttribute("y")!); // expected value
+                        int width = int.Parse(reader.GetAttribute("width")!); // expected value
+                        int height = int.Parse(reader.GetAttribute("height")!); // expected value
+                        int frameX = int.Parse(reader.GetAttribute("frameX") ?? "0"); // optional value
+                        int frameY = int.Parse(reader.GetAttribute("frameY") ?? "0"); // optional value
+                        int frameWidth = int.Parse(reader.GetAttribute("frameWidth") ?? "0"); // optional value
+                        int frameHeight = int.Parse(reader.GetAttribute("frameHeight") ?? "0"); // optional value
+                        textures.Add(new SubTexture(name, x, y, width, height, frameX, frameY, frameWidth, frameHeight));
                     }
-
-                    Console.WriteLine($"Reading element with data: {reader.NodeType}, " +
-                                      $"Attribute count: {reader.AttributeCount}");
-
-                    string name = reader.GetAttribute("name");
-                    int x = int.Parse(reader.GetAttribute("x")!); // expected value
-                    int y = int.Parse(reader.GetAttribute("y")!); // expected value
-                    int width = int.Parse(reader.GetAttribute("width")!); // expected value
-                    int height = int.Parse(reader.GetAttribute("height")!); // expected value
-                    int frameX = int.Parse(reader.GetAttribute("frameX") ?? "0"); // optional value
-                    int frameY = int.Parse(reader.GetAttribute("frameY") ?? "0"); // optional value
-                    int frameWidth = int.Parse(reader.GetAttribute("frameWidth") ?? "0"); // optional value
-                    int frameHeight = int.Parse(reader.GetAttribute("frameHeight") ?? "0"); // optional value
-                    textures.Add(new SubTexture(name, x, y, width, height, frameX, frameY, frameWidth, frameHeight));
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to parse file as XML, assuming SpriteSheetPacker format.");
+                    xml = false;
+                    textures.Clear();
                 }
             }
 
-            Console.WriteLine("Finished reading XML file.");
+            if (!xml)
+            {
+                try
+                {
+                    string[] lines = File.ReadAllLines(args[0]);
+                    imageName = Path.ChangeExtension(args[0], ".png");
+
+                    foreach (string line in lines)
+                    {
+                        string[] lineData = line.Split('=');
+                        string name = lineData[0];
+                        int[] textureData = lineData[1].TrimStart().Split(' ').Select(int.Parse).ToArray();
+                        textures.Add(new SubTexture(name, textureData[0], textureData[1], textureData[2], textureData[3], 0, 0, 0, 0));
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to parse as both XML (Sparrow Atlas) or SpriteSheetPacker formats. Exiting.");
+                    throw;
+                }
+            }
+            else 
+                Console.WriteLine("Finished reading XML file.");
+
             Console.WriteLine("Found texture data:");
 
             foreach (SubTexture texture in textures)
