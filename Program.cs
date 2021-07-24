@@ -12,7 +12,6 @@ namespace GetFunkin.AdobeNecromancer
     {
         public static void Main(string[] args)
         {
-            args = new[] {@"C:\Users\xxlen\Downloads\Funkin-master\Funkin-master\assets\week6\images\weeb\spirit.txt"};
             if (args is not {Length: 1} && !Debugger.IsAttached)
             {
                 Console.WriteLine("Expected XML file.");
