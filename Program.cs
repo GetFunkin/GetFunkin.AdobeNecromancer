@@ -12,98 +12,29 @@ namespace GetFunkin.AdobeNecromancer
     {
         public static void Main(string[] args)
         {
-            if (args is not {Length: 1} && !Debugger.IsAttached)
-            {
-                Console.WriteLine("Expected file.");
-                return;
-            }
-
-            Console.WriteLine("AdobeNecromancer: Re-animating the dead!");
-
-            if (Debugger.IsAttached && args is not { Length: 1 })
-            {
-                Console.WriteLine("Debugger attached, using pre-defined path to XML file.");
-                args = new[] {Path.Combine("DebugFiles", "logoBumpin.xml")};
-            }
+            AssertArguments(ref args);
 
             List<SubTexture> textures = new();
             string directory = Path.GetDirectoryName(args[0]);
-            string imageName = "";
 
             Console.WriteLine("Reading file...");
 
-            bool xml = true;
+            ReadAsXml(args[0], textures, out string imageName, out bool xmlFormat);
 
-            using (Stream stream = File.Open(args[0], FileMode.Open))
+            if (!xmlFormat)
             {
                 try
                 {
-                    XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings {CheckCharacters = false});
-                    bool startingElement = true;
-
-                    while (reader.Read())
-                    {
-                        if (reader.NodeType is XmlNodeType.XmlDeclaration or XmlNodeType.Comment or XmlNodeType.Whitespace
-                            or XmlNodeType.EndElement)
-                            continue;
-
-                        if (reader.NodeType == XmlNodeType.EndElement)
-                            break;
-
-                        if (reader.NodeType == XmlNodeType.Element && startingElement)
-                        {
-                            startingElement = false;
-                            imageName = reader.GetAttribute("imagePath");
-                            Console.WriteLine($"TextureAtlas image path: {imageName}");
-                            continue;
-                        }
-
-                        Console.WriteLine($"Reading element with data: {reader.NodeType}, " +
-                                          $"Attribute count: {reader.AttributeCount}");
-
-                        string name = reader.GetAttribute("name");
-                        int x = int.Parse(reader.GetAttribute("x")!); // expected value
-                        int y = int.Parse(reader.GetAttribute("y")!); // expected value
-                        int width = int.Parse(reader.GetAttribute("width")!); // expected value
-                        int height = int.Parse(reader.GetAttribute("height")!); // expected value
-                        int frameX = int.Parse(reader.GetAttribute("frameX") ?? "0"); // optional value
-                        int frameY = int.Parse(reader.GetAttribute("frameY") ?? "0"); // optional value
-                        int frameWidth = int.Parse(reader.GetAttribute("frameWidth") ?? "0"); // optional value
-                        int frameHeight = int.Parse(reader.GetAttribute("frameHeight") ?? "0"); // optional value
-                        textures.Add(new SubTexture(name, x, y, width, height, frameX, frameY, frameWidth, frameHeight));
-                    }
+                    ReadAsSpriteSheetPacker(args[0], textures, out imageName);
                 }
                 catch
                 {
-                    Console.WriteLine("Failed to parse file as XML, assuming SpriteSheetPacker format.");
-                    xml = false;
-                    textures.Clear();
-                }
-            }
-
-            if (!xml)
-            {
-                try
-                {
-                    string[] lines = File.ReadAllLines(args[0]);
-                    imageName = Path.ChangeExtension(args[0], ".png");
-
-                    textures.AddRange(from line in lines
-                        select line.Split('=')
-                        into lineData
-                        let name = lineData[0]
-                        let textureData = lineData[1].TrimStart().Split(' ').Select(int.Parse).ToArray()
-                        select new SubTexture(name, textureData[0], textureData[1], textureData[2], textureData[3], 0,
-                            0, 0, 0));
-                }
-                catch
-                {
-                    Console.WriteLine("Failed to parse as both XML (Sparrow Atlas) or SpriteSheetPacker formats. Exiting.");
+                    Console.WriteLine("Failed to parse Sparrow Atlas or SpriteSheetPacker formats. Exiting.");
                     throw;
                 }
             }
-            else 
-                Console.WriteLine("Finished reading XML file.");
+            else
+                Console.WriteLine("Finished reading file.");
 
             Console.WriteLine("Found texture data:");
 
@@ -150,13 +81,97 @@ namespace GetFunkin.AdobeNecromancer
 
                 try
                 {
-                    bitmap.Clone(crop, bitmap.PixelFormat).Save(Path.Combine(outputDir.FullName, $"{texture.Name}.png"));
+                    bitmap.Clone(crop, bitmap.PixelFormat)
+                        .Save(Path.Combine(outputDir.FullName, $"{texture.Name}.png"));
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Exception thrown while cropping and saving \"{texture.Name}\": {e}");
                 }
             }
+        }
+
+        private static void AssertArguments(ref string[] args)
+        {
+            if (args is not {Length: 1} && !Debugger.IsAttached)
+            {
+                Console.WriteLine("Expected file.");
+                return;
+            }
+
+            Console.WriteLine("AdobeNecromancer: Re-animating the dead!");
+
+            if (Debugger.IsAttached && args is not {Length: 1})
+            {
+                Console.WriteLine("Debugger attached, using pre-defined path to XML file.");
+                args = new[] {Path.Combine("DebugFiles", "logoBumpin.xml")};
+            }
+        }
+
+        public static void ReadAsXml(string file, List<SubTexture> textures, out string imageName, out bool success)
+        {
+            using Stream stream = File.Open(file, FileMode.Open);
+            imageName = "";
+
+            try
+            {
+                XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings {CheckCharacters = false});
+                bool startingElement = true;
+
+                while (reader.Read())
+                {
+                    if (reader.NodeType is XmlNodeType.XmlDeclaration or XmlNodeType.Comment or XmlNodeType.Whitespace
+                        or XmlNodeType.EndElement)
+                        continue;
+
+                    if (reader.NodeType == XmlNodeType.EndElement)
+                        break;
+
+                    if (reader.NodeType == XmlNodeType.Element && startingElement)
+                    {
+                        startingElement = false;
+                        imageName = reader.GetAttribute("imagePath");
+                        Console.WriteLine($"TextureAtlas image path: {imageName}");
+                        continue;
+                    }
+
+                    Console.WriteLine($"Reading element with data: {reader.NodeType}, " +
+                                      $"Attribute count: {reader.AttributeCount}");
+
+                    string name = reader.GetAttribute("name");
+                    int x = int.Parse(reader.GetAttribute("x")!); // expected value
+                    int y = int.Parse(reader.GetAttribute("y")!); // expected value
+                    int width = int.Parse(reader.GetAttribute("width")!); // expected value
+                    int height = int.Parse(reader.GetAttribute("height")!); // expected value
+                    int frameX = int.Parse(reader.GetAttribute("frameX") ?? "0"); // optional value
+                    int frameY = int.Parse(reader.GetAttribute("frameY") ?? "0"); // optional value
+                    int frameWidth = int.Parse(reader.GetAttribute("frameWidth") ?? "0"); // optional value
+                    int frameHeight = int.Parse(reader.GetAttribute("frameHeight") ?? "0"); // optional value
+                    textures.Add(new SubTexture(name, x, y, width, height, frameX, frameY, frameWidth, frameHeight));
+                }
+
+                success = true;
+            }
+            catch
+            {
+                Console.WriteLine("Failed to parse file as XML, assuming SpriteSheetPacker format.");
+                textures.Clear();
+                success = false;
+            }
+        }
+
+        public static void ReadAsSpriteSheetPacker(string file, List<SubTexture> textures, out string imageName)
+        {
+            string[] lines = File.ReadAllLines(file);
+            imageName = Path.ChangeExtension(file, ".png");
+
+            textures.AddRange(from line in lines
+                select line.Split('=')
+                into lineData
+                let name = lineData[0]
+                let textureData = lineData[1].TrimStart().Split(' ').Select(int.Parse).ToArray()
+                select new SubTexture(name, textureData[0], textureData[1], textureData[2], textureData[3], 0,
+                    0, 0, 0));
         }
     }
 }
