@@ -88,13 +88,13 @@ namespace GetFunkin.AdobeNecromancer
                     string[] lines = File.ReadAllLines(args[0]);
                     imageName = Path.ChangeExtension(args[0], ".png");
 
-                    foreach (string line in lines)
-                    {
-                        string[] lineData = line.Split('=');
-                        string name = lineData[0];
-                        int[] textureData = lineData[1].TrimStart().Split(' ').Select(int.Parse).ToArray();
-                        textures.Add(new SubTexture(name, textureData[0], textureData[1], textureData[2], textureData[3], 0, 0, 0, 0));
-                    }
+                    textures.AddRange(from line in lines
+                        select line.Split('=')
+                        into lineData
+                        let name = lineData[0]
+                        let textureData = lineData[1].TrimStart().Split(' ').Select(int.Parse).ToArray()
+                        select new SubTexture(name, textureData[0], textureData[1], textureData[2], textureData[3], 0,
+                            0, 0, 0));
                 }
                 catch
                 {
