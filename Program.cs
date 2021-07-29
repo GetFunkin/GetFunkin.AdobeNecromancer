@@ -8,6 +8,7 @@ using System.Xml;
 
 namespace GetFunkin.AdobeNecromancer
 {
+    // TODO: implement rotated, flipX, and flipY
     public static class Program
     {
         public static void Main(string[] args)
@@ -46,50 +47,30 @@ namespace GetFunkin.AdobeNecromancer
 
             Console.WriteLine($"Opening associated image file ({imageName})...");
 
-            using Image png = Image.FromFile(Path.Combine(directory ?? "", imageName ?? ""));
+            using Image png = FromFile(directory, imageName);
             Console.WriteLine("Generating output directory...");
             DirectoryInfo outputDir = Directory.CreateDirectory(Path.Combine(directory ?? "", "Output"));
             Console.WriteLine($"Output directory generated at: {outputDir.FullName}");
 
             Console.WriteLine("Cutting up textures based on texture data...");
 
-            // partial implementation of
-            // https://github.com/HaxeFlixel/flixel/blob/dev/flixel/graphics/frames/FlxAtlasFrames.hx#L252
-            // in c#
+            /* partial implementation of FlxAtlasFrames in c#
+             * https://github.com/HaxeFlixel/flixel/blob/dev/flixel/graphics/frames/FlxAtlasFrames.hx#L252
+             */
             foreach (SubTexture texture in textures)
             {
-                // TODO: implement rotated, flipX, and flipY
-                bool trimmed = texture.FrameX != 0;
-                Rectangle frame = new(texture.X, texture.Y, texture.Width, texture.Height);
-                Rectangle size = trimmed
-                    ? new Rectangle(texture.FrameX, texture.FrameY, texture.FrameWidth, texture.FrameHeight)
-                    : new Rectangle(0, 0, frame.Width, frame.Height);
-                Point offset = new(-size.Left, -size.Top);
-
-                using Bitmap bitmap = new(png);
-                Rectangle crop = new(frame.X, frame.Y, frame.Width, frame.Height);
-
-                if (crop.X < 0)
-                    crop.X = 0;
-
-                if (crop.Y < 0)
-                    crop.Y = 0;
-
-                Console.WriteLine($"Cropping frame: {texture.Name}, cropX: {crop.X}, cropY: {crop.Y}, " +
-                                  $"width: {crop.Width}, height: {crop.Height}, " +
-                                  $"originalX: {frame.X}, originalY: {frame.Y}");
-
                 try
                 {
-                    bitmap.Clone(crop, bitmap.PixelFormat)
-                        .Save(Path.Combine(outputDir.FullName, $"{texture.Name}.png"));
+                    GetCroppedBitmap(png, texture).Save(Path.Combine(outputDir.FullName, $"{texture.Name}.png"));
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Exception thrown while cropping and saving \"{texture.Name}\": {e}");
+                    Console.WriteLine($"Exception thrown while saving \"{texture.Name}\": {e}");
                 }
             }
         }
+
+        private static Image FromFile(string directory, string imageName) => Image.FromFile(Path.Combine(directory ?? "", imageName ?? ""));
 
         private static void AssertArguments(ref string[] args)
         {
@@ -172,6 +153,27 @@ namespace GetFunkin.AdobeNecromancer
                 let textureData = lineData[1].TrimStart().Split(' ').Select(int.Parse).ToArray()
                 select new SubTexture(name, textureData[0], textureData[1], textureData[2], textureData[3], 0,
                     0, 0, 0));
+        }
+
+        public static Bitmap GetCroppedBitmap(Image image, SubTexture texture)
+        {
+            texture.GetData(out bool _, out Rectangle frame, out Rectangle _, out Rectangle crop);
+            using Bitmap bitmap = new(image);
+
+            Console.WriteLine($"Cropping frame: {texture.Name}, cropX: {crop.X}, cropY: {crop.Y}, " +
+                              $"width: {crop.Width}, height: {crop.Height}, " +
+                              $"originalX: {frame.X}, originalY: {frame.Y}");
+
+            try
+            {
+                return bitmap.Clone(crop, bitmap.PixelFormat);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception thrown while cropping \"{texture.Name}\": {e}");
+            }
+
+            return bitmap;
         }
     }
 }

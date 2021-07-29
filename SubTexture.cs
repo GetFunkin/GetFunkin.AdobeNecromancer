@@ -1,4 +1,6 @@
-﻿namespace GetFunkin.AdobeNecromancer
+﻿using System.Drawing;
+
+namespace GetFunkin.AdobeNecromancer
 {
     public sealed class SubTexture
     {
@@ -31,6 +33,35 @@
             FrameY = frameY;
             FrameWidth = frameWidth;
             FrameHeight = frameHeight;
+        }
+
+        public void GetData(out bool trimmed, out Rectangle frame, out Rectangle size)
+        {
+            trimmed = FrameX != 0;
+            frame = new Rectangle(X, Y, Width, Height);
+
+            size = trimmed
+                ? new Rectangle(FrameX, FrameY, FrameWidth, FrameHeight)
+                : new Rectangle(0, 0, Width, Height);
+        }
+
+        public void GetData(out bool trimmed, out Rectangle frame, out Rectangle size, out Rectangle crop)
+        {
+            GetData(out trimmed, out frame, out size);
+            crop = GetCrop();
+        }
+
+        public Rectangle GetCrop()
+        {
+            Rectangle crop = new(X, Y, Width, Height);
+
+            if (crop.X < 0)
+                crop.X = 0;
+
+            if (crop.Y < 0)
+                crop.Y = 0;
+
+            return crop;
         }
     }
 }
