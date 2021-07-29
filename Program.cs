@@ -92,11 +92,17 @@ namespace GetFunkin.AdobeNecromancer
         public static void ReadAsXml(string file, List<SubTexture> textures, out string imageName, out bool success)
         {
             using Stream stream = File.Open(file, FileMode.Open);
+            using XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings {CheckCharacters = false});
+            ReadAsXml(reader, textures, out imageName, out success);
+        }
+
+        public static void ReadAsXml(XmlReader reader, List<SubTexture> textures, out string imageName,
+            out bool success)
+        {
             imageName = "";
 
             try
             {
-                XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings {CheckCharacters = false});
                 bool startingElement = true;
 
                 while (reader.Read())
