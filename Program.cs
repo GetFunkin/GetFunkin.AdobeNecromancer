@@ -14,7 +14,7 @@ namespace GetFunkin.AdobeNecromancer
         {
             if (args is not {Length: 1} && !Debugger.IsAttached)
             {
-                Console.WriteLine("Expected XML file.");
+                Console.WriteLine("Expected file.");
                 return;
             }
 
@@ -30,7 +30,7 @@ namespace GetFunkin.AdobeNecromancer
             string directory = Path.GetDirectoryName(args[0]);
             string imageName = "";
 
-            Console.WriteLine("Reading XML file...");
+            Console.WriteLine("Reading file...");
 
             bool xml = true;
 
