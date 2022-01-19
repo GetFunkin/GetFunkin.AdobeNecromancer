@@ -6,6 +6,11 @@
     public interface IAtlasFrame
     {
         /// <summary>
+        ///     The frame's identifiable name.
+        /// </summary>
+        string Name { get; }
+        
+        /// <summary>
         ///     The X position of the frame.
         /// </summary>
         int X { get; }

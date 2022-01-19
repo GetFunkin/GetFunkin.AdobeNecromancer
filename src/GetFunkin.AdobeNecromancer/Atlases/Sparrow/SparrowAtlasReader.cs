@@ -4,12 +4,12 @@ using System.Xml;
 
 namespace GetFunkin.AdobeNecromancer.Atlases.Sparrow
 {
-    public class SparrowAtlasReader : IAtlasReader<SparrowAtlasFrame>
+    public class SparrowAtlasReader : IAtlasReader<ISparrowAtlasFrame>
     {
         /// <inheritdoc cref="IAtlasReader{TFrame}.ReadStream"/>
-        public List<SparrowAtlasFrame> ReadStream(Stream stream, ref string imageName)
+        public List<ISparrowAtlasFrame> ReadStream(Stream stream, ref string imageName)
         {
-            List<SparrowAtlasFrame> frames = new();
+            List<ISparrowAtlasFrame> frames = new();
             
             using XmlReader xmlReader = XmlReader.Create(stream);
 

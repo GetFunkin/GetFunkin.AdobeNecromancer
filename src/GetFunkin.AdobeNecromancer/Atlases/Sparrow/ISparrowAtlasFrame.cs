@@ -5,11 +5,6 @@ namespace GetFunkin.AdobeNecromancer.Atlases.Sparrow
     public interface ISparrowAtlasFrame : IAtlasFrame
     {
         /// <summary>
-        ///     The frame's identifiable name.
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
         ///     Whether additional trimming should be supplied based off of <c>Frame&lt;N&gt;</c> properties.
         /// </summary>
         bool Trimmed { get; }
