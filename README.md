@@ -9,4 +9,10 @@ Alongside the library is a lightweight library for processing pre-implemented at
 Get it from NuGet.
 
 ## CLI usage.
-`dotnet path/to/GetFunkin.AdobeNecromancer.dll [sparrow|spp] [xml/txt directory]`
+Included in the Releases tab is a CLI app for processing these atlases.
+
+There are two parameters, `atlas-type` and `path`. `path` must always be specified, and should point to the `.xml`/`.txt` atlas file. `atlas-type` can either be `sparrow` (Adobe Animate, etc.) or `ssp` (SpriteSheetPacker).
+
+When in doubt, `.xml` = `sparrow` and `.txt` = `ssp`.
+
+The correct command line arguments for using the CLI app should look like this: `dotnet GetFunkin.AdobeNecromancer.CLI.dll --atlas-type sparrow --path senpai.xml`
