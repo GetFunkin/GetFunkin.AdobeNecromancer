@@ -5,8 +5,12 @@ namespace GetFunkin.AdobeNecromancer.Atlases.SpriteSheetPacker
 {
     public class SpriteSheetPackerAtlasReader : IAtlasReader<ISpriteSheetPackerAtlasFrame>
     {
+        public NameModifierType NameModifierType => NameModifierType.Extension;
+
         public List<ISpriteSheetPackerAtlasFrame> ReadStream(Stream stream, ref string imageName)
         {
+            imageName = Path.ChangeExtension(imageName, ".png");
+            
             using StreamReader streamReader = new(stream);
 
             List<ISpriteSheetPackerAtlasFrame> frames = new();

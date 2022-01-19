@@ -6,7 +6,8 @@ namespace GetFunkin.AdobeNecromancer.Atlases.Sparrow
 {
     public class SparrowAtlasReader : IAtlasReader<ISparrowAtlasFrame>
     {
-        /// <inheritdoc cref="IAtlasReader{TFrame}.ReadStream"/>
+        public NameModifierType NameModifierType => NameModifierType.Full;
+
         public List<ISparrowAtlasFrame> ReadStream(Stream stream, ref string imageName)
         {
             List<ISparrowAtlasFrame> frames = new();

@@ -9,6 +9,11 @@ namespace GetFunkin.AdobeNecromancer.Atlases
     public interface IAtlasReader<TFrame> where TFrame : IAtlasFrame
     {
         /// <summary>
+        ///     The type of image name modification this atlas reader performs.
+        /// </summary>
+        NameModifierType NameModifierType { get; }
+
+        /// <summary>
         ///     Reads frame data from a stream.
         /// </summary>
         /// <param name="stream">The stream of bytes to read data from.</param>
