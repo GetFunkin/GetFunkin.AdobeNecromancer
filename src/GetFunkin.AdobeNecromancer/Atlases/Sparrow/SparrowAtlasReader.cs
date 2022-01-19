@@ -30,7 +30,7 @@ namespace GetFunkin.AdobeNecromancer.Atlases.Sparrow
                 if (xmlReader.NodeType == XmlNodeType.Element && start)
                 {
                     start = false;
-                    imageName = xmlReader.GetAttribute("imagePath");
+                    imageName = Path.Join(Path.GetDirectoryName(imageName), xmlReader.GetAttribute("imagePath"));
                     continue;
                 }
 
