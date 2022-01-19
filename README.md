@@ -1,7 +1,12 @@
 # GetFunkin.AdobeNecromancer
 Re-animating the dead!
 
-AdobeNecromancer is an MIT-licensed console program that uses .NET 5. It converts Sparrow Atlas-formatted images to individual, cropped `.png` files when given an XML file.
+_GetFunkin.AdobeNecromancer_ is a FOSS (MIT-licensed) library for reading and processing atlas formats. Currently, Sparrow Atlas v2 and Spritesheet Packer formats are supported.
 
-## Example Usage
-![](https://raw.githubusercontent.com/GetFunkin/GetFunkin.AdobeNecromancer/master/example-necromancy.gif)
+Alongside the library is a lightweight library for processing pre-implemented atlas processing.
+
+## Library Usage
+Get it from NuGet.
+
+## CLI usage.
+`dotnet path/to/GetFunkin.AdobeNecromancer.dll [sparrow|spp] [xml/txt directory]`
